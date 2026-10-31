@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="/manifest.json" />
+  <title>Swing Trading Signals</title>
+  <style>
+    body { background: #111827; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+    button { background: #2563eb; color: #fff; border: none; padding: 12px 24px; font-size: 16px; border-radius: 8px; cursor: pointer; margin-top: 20px; }
+    button:disabled { background: #4b5563; }
+  </style>
+</head>
+<body>
+  <h1>Swing Signal System</h1>
+  <p>Install this app to your home screen, then enable push notifications.</p>
+  <button id="enable-push">Enable Push Notifications</button>
+
+  <script>
+    const PUBLIC_VAPID_KEY = "YOUR_PUBLIC_VAPID_KEY_HERE";
+
+    async function registerPush() {
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+        alert("Push notifications not supported.");
+        return;
+      }
+
+      const register = await navigator.serviceWorker.register("/sw.js");
+      const permission = await Notification.requestPermission();
+      
+      if (permission !== "granted") {
+        alert("Permission denied.");
+        return;
+      }
+
+      const subscription = await register.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: PUBLIC_VAPID_KEY
+      });
+
+      await fetch("/.netlify/functions/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(subscription)
+      });
+
+      alert("Push notifications enabled!");
+    }
+
+    document.getElementById("enable-push").addEventListener("click", registerPush);
+  </script>
+</body>
+</html>
